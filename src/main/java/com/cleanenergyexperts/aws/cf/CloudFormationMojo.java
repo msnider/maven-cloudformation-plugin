@@ -23,9 +23,12 @@ import java.util.Map;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.settings.Server;
+import org.apache.maven.settings.Settings;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
@@ -51,14 +54,26 @@ import com.amazonaws.services.s3.AmazonS3Client;
 public class CloudFormationMojo extends AbstractMojo {
 	
 	/**
-	 * @parameter property="accessKey"
+	 * Maven Settings (settings.xml)
+	 * @parameter property="settings"
 	 * @required
+	 * @readonly
+	 */
+	protected Settings settings;
+	
+	/**
+	 * Server ID in Maven settings.xml
+	 * @parameter property="serverId"
+	 */
+	private String serverId;
+	
+	/**
+	 * @parameter property="accessKey"
 	 */
 	private String accessKey;
 	
 	/**
 	 * @parameter property="secretKey"
-	 * @required
 	 */
 	private String secretKey;
 	
@@ -195,6 +210,21 @@ public class CloudFormationMojo extends AbstractMojo {
 	    }
         
         getLog().info("Cloud Formation Stack is now updating...");
+    }
+    
+    protected AWSCredentials getAWSCredentials() throws MojoExecutionException {
+    	if (settings != null && serverId != null) {
+    		Server server = settings.getServer(serverId);
+    		if (server != null) {
+    			accessKey = server.getUsername().trim();
+    			secretKey = server.getPassword().trim();
+    			// TODO: Decrypt https://bitbucket.org/aldrinleal/beanstalker/src/d72b183f832cd81c670ca1e4ae764868cdfd16b9/beanstalker-common/src/main/java/br/com/ingenieux/mojo/aws/AbstractAWSMojo.java?at=default
+    		}
+    	}
+    	if (accessKey == null || secretKey == null || accessKey.isEmpty() || secretKey.isEmpty()) {
+    		throw new MojoExecutionException("Missing either accessKey and secretKey.");
+    	}
+    	return new BasicAWSCredentials(accessKey, secretKey);
     }
     
     /**
