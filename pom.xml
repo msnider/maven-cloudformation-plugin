@@ -41,6 +41,12 @@
 		</dependency>
 	</dependencies>
 	
+	<scm>
+		<url>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</url>
+		<connection>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</connection>
+		<developerConnection>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</developerConnection>
+	</scm>
+	
 	<!--  @see https://github.com/arey/maven-config-github-cloudbees/blob/master/pom.xml -->
 	<distributionManagement>
 		<downloadUrl>https://github.com:cleanenergyexperts/aws-parent</downloadUrl>
