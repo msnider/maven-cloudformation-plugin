@@ -36,9 +36,35 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk</artifactId>
-			<version>1.7.12</version>
+			<version>1.8.5</version>
 		</dependency>
 	</dependencies>
+	
+	<repositories>
+		<!-- Cloudbees maven repositories for releases and snapshots -->
+		<repository>
+			<id>cee.forge.cloudbees.com-releases</id>
+			<name>cee.forge.cloudbees.com-releases</name>
+			<url>https://repository-cee.forge.cloudbees.com/release/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>cee.forge.cloudbees.com-snapshots</id>
+			<name>cee.forge.cloudbees.com-snapshots</name>
+			<url>https://repository-cee.forge.cloudbees.com/snapshot/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 	
 	<scm>
 		<url>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</url>
@@ -70,24 +96,6 @@
 				<artifactId>wagon-webdav</artifactId>
 				<version>1.0-beta-2</version>
 			</extension>
-
-			<!--  @see http://maven.apache.org/wagon/wagon-providers/wagon-scm/usage.html -->
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-scm</artifactId>
-				<version>2.4</version>
-			</extension>
-			<extension>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-manager-plexus</artifactId>
-				<version>1.8.1</version>
-			</extension>
-			<extension>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-provider-gitexe</artifactId>
-				<version>1.8.1</version>
-			</extension>
-
 		</extensions>
 	</build>
 </project>

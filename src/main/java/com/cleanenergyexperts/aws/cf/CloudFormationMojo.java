@@ -90,10 +90,10 @@ public class CloudFormationMojo extends AbstractMojo {
 	private String region;
 	
 	/**
-	 * @parameter property="stackName"
+	 * @parameter property="stackNames"
 	 * @required
 	 */
-	private String stackName;
+	private List<String> stackNames;
 	
     /**
      * Location of the artifact file.
@@ -112,7 +112,7 @@ public class CloudFormationMojo extends AbstractMojo {
 
     public void execute() throws MojoExecutionException {
         getLog().info("Bucket Name: " + bucketName);
-        getLog().info("Cloud Formation Stack Name: " + stackName);
+        //getLog().info("Cloud Formation Stack Name: " + stackName);
         
         if (artifactFile == null || !artifactFile.isFile()) {
         	throw new MojoExecutionException("Cannot find artifact file to upload");
@@ -121,9 +121,11 @@ public class CloudFormationMojo extends AbstractMojo {
         getLog().info("Artifact Name: " + artifactKey);
         
         BasicAWSCredentials awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
+        AmazonCloudFormationClient cfClient = new AmazonCloudFormationClient(awsCredentials);
+        cfClient.setEndpoint(getCloudFormationEndPoint());
+        AmazonS3Client s3Client = new AmazonS3Client(awsCredentials);
         
         // Upload Artifact to S3
-        AmazonS3Client s3Client = new AmazonS3Client(awsCredentials);
         try {
         	getLog().info("Uploading artifact to S3...");
         	s3Client.putObject(bucketName, artifactKey, artifactFile);
@@ -132,13 +134,58 @@ public class CloudFormationMojo extends AbstractMojo {
         } catch (AmazonClientException e) {
         	throw new MojoExecutionException("[CLIENT] Could Not Upload File to S3", e);
         }
-		
-        // Update the Cloud Formation Template
-        AmazonCloudFormationClient cfClient = new AmazonCloudFormationClient(awsCredentials);
-        cfClient.setEndpoint(getCloudFormationEndPoint());
         
-        // Get the Stack template
-        String templateBody = null;
+        // Update each stack with the new artifact file
+        for(String stackName : stackNames) {
+        	getLog().info("Cloud Formation Stack Name: " + stackName);
+        	String templateBody = getTemplateBody(cfClient, stackName);
+        	Stack stack = getStack(cfClient, stackName);
+        	
+        	// If passed additional parameters, update them
+            List<Parameter> parameters = stack.getParameters();
+            if (stackParameters != null && !stackParameters.isEmpty()) {
+            	List<Parameter> tmpParams = new ArrayList<Parameter>();
+            	
+            	// Add Existing Parameters we haven't locally overwritten
+            	for(Parameter oldParam : parameters) {
+            		String oldKey = oldParam.getParameterKey();
+            		if (!stackParameters.containsKey(oldKey)) {
+            			tmpParams.add(oldParam);
+            		}
+            	}
+            	
+            	// Add Overwrite parameters
+            	for(String key : stackParameters.keySet()) {
+            		Parameter newParam = new Parameter();
+            		newParam.setParameterKey(key);
+            		newParam.setParameterValue(stackParameters.get(key));
+            		tmpParams.add(newParam);
+            	}
+            	parameters = tmpParams;
+            }
+            
+            // Update the Stack
+            UpdateStackRequest updateStackRequest = new UpdateStackRequest();
+            updateStackRequest.setStackName(stackName);
+            updateStackRequest.setTemplateBody(templateBody);
+            updateStackRequest.setParameters(parameters);
+            updateStackRequest.setCapabilities(stack.getCapabilities());
+            try {
+            	getLog().info("Updating Cloud Formation Stack...");
+            	cfClient.updateStack(updateStackRequest);
+            } catch (AmazonServiceException e) {
+    	    	throw new MojoExecutionException("[SERVICE] Could Not Update Cloud Formation Stack", e);
+    	    } catch (AmazonClientException e) {
+    	    	throw new MojoExecutionException("[CLIENT] Could Not Update Cloud Formation Stack", e);
+    	    }
+            getLog().info("Cloud Formation Stack " + stackName + "is now updating...");
+        }
+        
+        getLog().info("All stacks have been updated. Complete.");
+    }
+    
+    protected String getTemplateBody(AmazonCloudFormationClient cfClient, String stackName) throws MojoExecutionException {
+    	String templateBody = null;
         try {
             GetTemplateRequest getTemplateRequest = new GetTemplateRequest();
             getTemplateRequest.setStackName(stackName);
@@ -153,9 +200,11 @@ public class CloudFormationMojo extends AbstractMojo {
         } catch (AmazonClientException e) {
         	throw new MojoExecutionException("[CLIENT] Could Not Get Cloud Formation Stack Template", e);
         }
-        
-        // Get the Stack parameters
-        Stack stack = null;
+        return templateBody;
+    }
+    
+    protected Stack getStack(AmazonCloudFormationClient cfClient, String stackName) throws MojoExecutionException {
+    	Stack stack = null;
         try {
             DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest();
             describeStacksRequest.setStackName(stackName);
@@ -170,46 +219,7 @@ public class CloudFormationMojo extends AbstractMojo {
 	    } catch (AmazonClientException e) {
 	    	throw new MojoExecutionException("[CLIENT] Could Not Get Cloud Formation Stack Details", e);
 	    }
-        
-        // If passed additional parameters, update them
-        List<Parameter> parameters = stack.getParameters();
-        if (stackParameters != null && !stackParameters.isEmpty()) {
-        	List<Parameter> tmpParams = new ArrayList<Parameter>();
-        	
-        	// Add Existing Parameters we haven't locally overwritten
-        	for(Parameter oldParam : parameters) {
-        		String oldKey = oldParam.getParameterKey();
-        		if (!stackParameters.containsKey(oldKey)) {
-        			tmpParams.add(oldParam);
-        		}
-        	}
-        	
-        	// Add Overwrite parameters
-        	for(String key : stackParameters.keySet()) {
-        		Parameter newParam = new Parameter();
-        		newParam.setParameterKey(key);
-        		newParam.setParameterValue(stackParameters.get(key));
-        		tmpParams.add(newParam);
-        	}
-        	parameters = tmpParams;
-        }
-        
-        // Update the Stack
-        UpdateStackRequest updateStackRequest = new UpdateStackRequest();
-        updateStackRequest.setStackName(stackName);
-        updateStackRequest.setTemplateBody(templateBody);
-        updateStackRequest.setParameters(parameters);
-        updateStackRequest.setCapabilities(stack.getCapabilities());
-        try {
-        	getLog().info("Updating Cloud Formation Stack...");
-        	cfClient.updateStack(updateStackRequest);
-        } catch (AmazonServiceException e) {
-	    	throw new MojoExecutionException("[SERVICE] Could Not Update Cloud Formation Stack", e);
-	    } catch (AmazonClientException e) {
-	    	throw new MojoExecutionException("[CLIENT] Could Not Update Cloud Formation Stack", e);
-	    }
-        
-        getLog().info("Cloud Formation Stack is now updating...");
+        return stack;
     }
     
     protected AWSCredentials getAWSCredentials() throws MojoExecutionException {
