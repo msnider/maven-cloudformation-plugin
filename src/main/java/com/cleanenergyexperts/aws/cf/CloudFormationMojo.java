@@ -54,20 +54,6 @@ import com.amazonaws.services.s3.AmazonS3Client;
 public class CloudFormationMojo extends AbstractMojo {
 	
 	/**
-	 * Maven Settings (settings.xml)
-	 * @parameter property="settings"
-	 * @required
-	 * @readonly
-	 */
-	protected Settings settings;
-	
-	/**
-	 * Server ID in Maven settings.xml
-	 * @parameter property="serverId"
-	 */
-	private String serverId;
-	
-	/**
 	 * @parameter property="accessKey"
 	 */
 	private String accessKey;
@@ -223,14 +209,14 @@ public class CloudFormationMojo extends AbstractMojo {
     }
     
     protected AWSCredentials getAWSCredentials() throws MojoExecutionException {
-    	if (settings != null && serverId != null) {
+    	/*if (settings != null && serverId != null) {
     		Server server = settings.getServer(serverId);
     		if (server != null) {
     			accessKey = server.getUsername().trim();
     			secretKey = server.getPassword().trim();
     			// TODO: Decrypt https://bitbucket.org/aldrinleal/beanstalker/src/d72b183f832cd81c670ca1e4ae764868cdfd16b9/beanstalker-common/src/main/java/br/com/ingenieux/mojo/aws/AbstractAWSMojo.java?at=default
     		}
-    	}
+    	}*/
     	if (accessKey == null || secretKey == null || accessKey.isEmpty() || secretKey.isEmpty()) {
     		throw new MojoExecutionException("Missing either accessKey and secretKey.");
     	}
