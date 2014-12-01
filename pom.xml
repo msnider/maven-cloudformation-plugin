@@ -36,65 +36,33 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk</artifactId>
-			<version>1.8.5</version>
+			<version>1.9.8</version>
 		</dependency>
 	</dependencies>
-	
-	<repositories>
-		<!-- Cloudbees maven repositories for releases and snapshots -->
-		<repository>
-			<id>cee.forge.cloudbees.com-releases</id>
-			<name>cee.forge.cloudbees.com-releases</name>
-			<url>https://repository-cee.forge.cloudbees.com/release/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>cee.forge.cloudbees.com-snapshots</id>
-			<name>cee.forge.cloudbees.com-snapshots</name>
-			<url>https://repository-cee.forge.cloudbees.com/snapshot/</url>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
 	
 	<scm>
 		<url>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</url>
 		<connection>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</connection>
 		<developerConnection>scm:git:git@github.com:msnider/maven-cloudformation-plugin.git</developerConnection>
 	</scm>
-	
-	<!--  @see https://github.com/arey/maven-config-github-cloudbees/blob/master/pom.xml -->
 	<distributionManagement>
-		<downloadUrl>https://github.com:cleanenergyexperts/aws-parent</downloadUrl>
-		<snapshotRepository>
-			<id>cee.forge.cloudbees.com-snapshots</id>
-			<name>cee.forge.cloudbees.com-snapshots</name>
-			<url>dav:https://repository-cee.forge.cloudbees.com/snapshot/</url>
-		</snapshotRepository>
 		<repository>
-			<id>cee.forge.cloudbees.com-releases</id>
-			<name>cee.forge.cloudbees.com-releases</name>
-			<url>dav:https://repository-cee.forge.cloudbees.com/release/</url>
+			<id>aws-release</id>
+			<name>AWS Release Repository</name>
+			<url>s3://maven.leadoperations.co/release</url>
 		</repository>
+		<snapshotRepository>
+			<id>aws-snapshot</id>
+			<name>AWS Snapshot Repository</name>
+			<url>s3://maven.leadoperations.co/snapshot</url>
+		</snapshotRepository>
 	</distributionManagement>
-
 	<build>
 		<extensions>
-			<!-- Extension required to deploy a snapshot or a release to the CloudBees 
-				remote maven repository using Webdav -->
 			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-webdav</artifactId>
-				<version>1.0-beta-2</version>
+				<groupId>org.springframework.build</groupId>
+				<artifactId>aws-maven</artifactId>
+				<version>5.0.0.RELEASE</version>
 			</extension>
 		</extensions>
 	</build>
