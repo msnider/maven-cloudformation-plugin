@@ -8,17 +8,20 @@ To use this library in another Maven Project:
 
 Add the following to the pom.xml for releases:
 
-```<repositories>
+```
+<repositories>
     <repository>
         <id>maven.leadoperations.co-release</id>
         <name>AWS S3 Release Repository</name>
         <url>http://maven.leadoperations.co/release</url>
     </repository>
-</repositories>```
+</repositories>
+```
 
 or for snapshots:
 
-```<repositories>
+```
+<repositories>
     <repository>
         <id>maven.leadoperations.co-snapshot</id>
         <name>AWS S3 Snapshot Repository</name>
@@ -27,7 +30,8 @@ or for snapshots:
             <enabled>true</enabled>
         </snapshots>
     </repository>
-</repositories>```
+</repositories>
+```
 
 Then add the plugin:
 
